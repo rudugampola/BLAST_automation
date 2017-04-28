@@ -1,0 +1,39 @@
+# run a BLAST for query seq, return full report
+def run_blast(seq): 
+
+	import re, subprocess
+	cmd = ['blastn', '-db', 'NC_000913.fna', '-task', 'blastn', '-evalue', '1000']
+	p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+	fasta = '>myseq\n' + seq + '\n'
+	stdout, stderr = p.communicate(fasta)
+	
+	return stdout 
+
+
+# look for the highest score and e-value in BLAST report 
+def get_top_score(report): 		
+
+	import re, subprocess
+	match = re.search(r'Score = (\S+)', report)
+	score = float (match.group(1)) 
+	match = re.search(r'Expect =\s+(\S+)', report) 
+	e = float (match.group(1)) 
+
+	return e, score
+
+
+# shuffle sequence n times and return all scores and an e-values
+def get_shuffled_scores (seq1, n): 
+
+	import random, re, subprocess
+
+	l = list(seq1) 
+	results = []
+	
+	for i in range (n):  
+		random.shuffle(l)
+		shuffled = ''.join(l)
+		report = run_blast(shuffled) 
+		results.append(get_top_score (report))	
+	
+	return results 
